@@ -72,6 +72,8 @@ async def _proxy(request: Request, target_base: str) -> Response:
         for k, v in request.headers.items()
         if k.lower() not in _hop_by_hop_headers()
     }
+    # Force identity encoding upstream so we receive raw bytes we can forward as-is
+    headers["Accept-Encoding"] = "identity"
     # Pass real client IP downstream
     headers["X-Forwarded-For"] = request.client.host
 
