@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from "recharts";
-import { getAnalytics, type AnalyticsResponse } from "@/lib/api";
+import { getAnalytics, type AnalyticsResponse } from "../lib/api";
 
 interface Props {
   shortCode: string;

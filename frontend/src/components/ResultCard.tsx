@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Copy, Check, Download } from "lucide-react";
-import type { LinkResponse } from "@/lib/api";
+import type { LinkResponse } from "../lib/api";
 
 interface Props {
   result: LinkResponse;

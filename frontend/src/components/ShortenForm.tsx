@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { ChevronDown, ChevronUp, AlertCircle } from "lucide-react";
-import { createLink, type CreateLinkPayload, type LinkResponse } from "@/lib/api";
+import { createLink, type CreateLinkPayload, type LinkResponse } from "../lib/api";
 import ResultCard from "./ResultCard";
 
 const EXPIRY_OPTIONS = [

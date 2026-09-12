@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import ShortenForm from "@/components/ShortenForm";
+import ShortenForm from "../components/ShortenForm";
 
 export const metadata: Metadata = {
   title: "Short.ly — Shorten your URL",

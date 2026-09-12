@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { ExternalLink, BarChart2 } from "lucide-react";
-import { getMyLinks, type LinkRecord } from "@/lib/api";
+import { getMyLinks, type LinkRecord } from "../lib/api";
 import AnalyticsView from "./AnalyticsView";
 
 function VerifiedDot({ status }: { status: string }) {
