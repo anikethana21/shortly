@@ -38,7 +38,7 @@ _client: httpx.AsyncClient | None = None
 @app.on_event("startup")
 async def startup():
     global _client
-    _client = httpx.AsyncClient(timeout=30.0, follow_redirects=False)
+    _client = httpx.AsyncClient(timeout=30.0, follow_redirects=False, http2=False)
     logger.info(
         "api-gateway started | link-service=%s | redirect-service=%s",
         LINK_SERVICE_URL,
@@ -89,9 +89,10 @@ async def _proxy(request: Request, target_base: str) -> Response:
     response_headers = {
         k: v
         for k, v in upstream.headers.items()
-        if k.lower() not in _hop_by_hop_headers() | {"content-encoding", "content-length"}
+        if k.lower() not in _hop_by_hop_headers() | {"content-encoding", "content-length", "transfer-encoding"}
     }
 
+    # httpx automatically decompresses; upstream.content is raw decoded bytes
     return Response(
         content=upstream.content,
         status_code=upstream.status_code,
