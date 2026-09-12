@@ -31,6 +31,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+from fastapi import Request as _Req
+from fastapi.responses import PlainTextResponse
+import traceback as _tb
+
+@app.exception_handler(Exception)
+async def _global_exc_handler(request: _Req, exc: Exception):
+    tb = _tb.format_exc()
+    logger.error("Unhandled exception on %s %s:\n%s", request.method, request.url, tb)
+    return PlainTextResponse(f"500 Internal Server Error\n\n{tb}", status_code=500)
+
+
 # Shared async HTTP client — reused across requests
 _client: httpx.AsyncClient | None = None
 
@@ -79,15 +91,24 @@ async def _proxy(request: Request, target_base: str) -> Response:
 
     body = await request.body()
 
-    upstream = await _client.request(
-        method=request.method,
-        url=url,
-        headers=headers,
-        content=body,
-    )
+    try:
+        upstream = await _client.request(
+            method=request.method,
+            url=url,
+            headers=headers,
+            content=body,
+        )
+    except Exception as exc:
+        logger.exception("Upstream request failed: %s -> %s", request.method, url)
+        return Response(content=f"Gateway upstream error: {exc}", status_code=502)
+
+    response_headers = {
+        k: v
+        for k, v in upstream.headers.items()
+        if k.lower() not in _hop_by_hop_headers() | {"content-encoding", "content-length", "transfer-encoding"}
+    }
 
     content_encoding = upstream.headers.get("content-encoding", "").lower()
-
     body_bytes = upstream.content  # httpx decodes gzip/deflate automatically
 
     # httpx does NOT decode brotli — handle it explicitly
@@ -95,12 +116,14 @@ async def _proxy(request: Request, target_base: str) -> Response:
         try:
             import brotli  # type: ignore
             body_bytes = brotli.decompress(body_bytes)
-        except Exception:
-            try:
-                import brotlicffi  # type: ignore
-                body_bytes = brotlicffi.decompress(body_bytes)
-            except Exception as exc:
-                logger.warning("brotli decompress failed: %s", exc)
+            logger.info("Brotli-decoded upstream response (%d bytes)", len(body_bytes))
+        except Exception as exc:
+            logger.warning("brotli decompress failed: %s — forwarding raw bytes", exc)
+
+    logger.info(
+        "%s %s -> %s %d bytes (enc=%s)",
+        request.method, url, upstream.status_code, len(body_bytes), content_encoding or "none",
+    )
 
     return Response(
         content=body_bytes,
