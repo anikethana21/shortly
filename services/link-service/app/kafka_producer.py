@@ -22,12 +22,14 @@ async def init_producer() -> None:
         sasl_username = os.environ.get("KAFKA_USERNAME")
         sasl_password = os.environ.get("KAFKA_PASSWORD")
         if sasl_username and sasl_password:
+            import ssl
             _producer = AIOKafkaProducer(
                 bootstrap_servers=bootstrap,
                 security_protocol="SASL_SSL",
                 sasl_mechanism="SCRAM-SHA-256",
                 sasl_plain_username=sasl_username,
                 sasl_plain_password=sasl_password,
+                ssl_context=ssl.create_default_context(),
                 value_serializer=lambda v: json.dumps(v).encode("utf-8"),
             )
         else:

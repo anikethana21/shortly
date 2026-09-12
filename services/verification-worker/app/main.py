@@ -91,11 +91,13 @@ async def main() -> None:
         value_deserializer=lambda v: json.loads(v.decode("utf-8")),
     )
     if sasl_username and sasl_password:
+        import ssl
         consumer_kwargs.update(
             security_protocol="SASL_SSL",
             sasl_mechanism="SCRAM-SHA-256",
             sasl_plain_username=sasl_username,
             sasl_plain_password=sasl_password,
+            ssl_context=ssl.create_default_context(),
         )
 
     consumer = AIOKafkaConsumer("link.verify", **consumer_kwargs)
