@@ -56,7 +56,7 @@ async def shutdown():
 def _hop_by_hop_headers():
     return {
         "connection", "keep-alive", "proxy-authenticate", "proxy-authorization",
-        "te", "trailer", "transfer-encoding", "upgrade",
+        "te", "trailer", "transfer-encoding", "upgrade", "host",
     }
 
 
