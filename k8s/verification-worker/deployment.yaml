@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: verification-worker
+  namespace: shortly
+  labels:
+    app: verification-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: verification-worker
+  template:
+    metadata:
+      labels:
+        app: verification-worker
+    spec:
+      containers:
+        - name: verification-worker
+          image: verification-worker:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: shortly-config
+            - secretRef:
+                name: shortly-secrets
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"

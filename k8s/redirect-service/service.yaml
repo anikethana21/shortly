@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: redirect-service
+  namespace: shortly
+spec:
+  selector:
+    app: redirect-service
+  ports:
+    - port: 8002
+      targetPort: 8002
+  type: ClusterIP

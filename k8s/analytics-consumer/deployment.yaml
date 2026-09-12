@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analytics-consumer
+  namespace: shortly
+  labels:
+    app: analytics-consumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: analytics-consumer
+  template:
+    metadata:
+      labels:
+        app: analytics-consumer
+    spec:
+      containers:
+        - name: analytics-consumer
+          image: analytics-consumer:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: shortly-config
+            - secretRef:
+                name: shortly-secrets
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"

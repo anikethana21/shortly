@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: "Shortly Dashboards"
+    orgId: 1
+    folder: "Shortly"
+    type: file
+    disableDeletion: true
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

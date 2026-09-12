@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shortly-config
+  namespace: shortly
+data:
+  MONGO_DB_NAME: "shortly"
+  CLEANUP_INTERVAL_MINUTES: "15"
+  REDIS_DEFAULT_TTL: "2592000"
+  LINK_SERVICE_URL: "http://link-service:8001"
+  REDIRECT_SERVICE_URL: "http://redirect-service:8002"
+  ALLOWED_ORIGINS: "*"

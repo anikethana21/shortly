@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: link-service
+  namespace: shortly
+spec:
+  selector:
+    app: link-service
+  ports:
+    - port: 8001
+      targetPort: 8001
+  type: ClusterIP
