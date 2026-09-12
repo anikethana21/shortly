@@ -86,15 +86,24 @@ async def _proxy(request: Request, target_base: str) -> Response:
         content=body,
     )
 
-    response_headers = {
-        k: v
-        for k, v in upstream.headers.items()
-        if k.lower() not in _hop_by_hop_headers() | {"content-encoding", "content-length", "transfer-encoding"}
-    }
+    content_encoding = upstream.headers.get("content-encoding", "").lower()
 
-    # httpx automatically decompresses; upstream.content is raw decoded bytes
+    body_bytes = upstream.content  # httpx decodes gzip/deflate automatically
+
+    # httpx does NOT decode brotli — handle it explicitly
+    if content_encoding == "br":
+        try:
+            import brotli  # type: ignore
+            body_bytes = brotli.decompress(body_bytes)
+        except Exception:
+            try:
+                import brotlicffi  # type: ignore
+                body_bytes = brotlicffi.decompress(body_bytes)
+            except Exception as exc:
+                logger.warning("brotli decompress failed: %s", exc)
+
     return Response(
-        content=upstream.content,
+        content=body_bytes,
         status_code=upstream.status_code,
         headers=response_headers,
     )
