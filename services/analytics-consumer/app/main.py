@@ -63,7 +63,35 @@ async def process_message(db, data: dict) -> None:
     logger.info("Processed click for %s on %s", short_code, date_str)
 
 
+async def _health_server():
+    async def handle_health(reader, writer):
+        try:
+            await reader.read(1024)
+            response = (
+                b"HTTP/1.1 200 OK\r\n"
+                b"Content-Type: application/json\r\n"
+                b"Content-Length: 16\r\n\r\n"
+                b"{\"status\":\"ok\"}\n"
+            )
+            writer.write(response)
+            await writer.drain()
+        except Exception:
+            pass
+        finally:
+            writer.close()
+            try:
+                await writer.wait_closed()
+            except Exception:
+                pass
+
+    port = int(os.environ.get("PORT", "8003"))
+    server = await asyncio.start_server(handle_health, "0.0.0.0", port)
+    logger.info("analytics-consumer health server listening on port %d", port)
+    return server
+
+
 async def main() -> None:
+    health_srv = await _health_server()
     bootstrap = os.environ["KAFKA_BOOTSTRAP_SERVERS"]
     sasl_username = os.environ.get("KAFKA_USERNAME")
     sasl_password = os.environ.get("KAFKA_PASSWORD")
@@ -96,6 +124,8 @@ async def main() -> None:
                 logger.error("Error processing message: %s", exc)
     finally:
         await consumer.stop()
+        health_srv.close()
+        await health_srv.wait_closed()
         logger.info("analytics-consumer stopped")
 
 

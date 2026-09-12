@@ -32,7 +32,35 @@ async def cleanup_expired(db) -> None:
         logger.debug("No expired links to clean up")
 
 
+async def _health_server():
+    async def handle_health(reader, writer):
+        try:
+            await reader.read(1024)
+            response = (
+                b"HTTP/1.1 200 OK\r\n"
+                b"Content-Type: application/json\r\n"
+                b"Content-Length: 16\r\n\r\n"
+                b"{\"status\":\"ok\"}\n"
+            )
+            writer.write(response)
+            await writer.drain()
+        except Exception:
+            pass
+        finally:
+            writer.close()
+            try:
+                await writer.wait_closed()
+            except Exception:
+                pass
+
+    port = int(os.environ.get("PORT", "8005"))
+    server = await asyncio.start_server(handle_health, "0.0.0.0", port)
+    logger.info("cleanup-service health server listening on port %d", port)
+    return server
+
+
 async def main() -> None:
+    health_srv = await _health_server()
     db = get_db()
     interval_minutes = int(os.getenv("CLEANUP_INTERVAL_MINUTES", "15"))
 
@@ -55,6 +83,8 @@ async def main() -> None:
             await asyncio.sleep(60)
     except (KeyboardInterrupt, SystemExit):
         scheduler.shutdown()
+        health_srv.close()
+        await health_srv.wait_closed()
         logger.info("cleanup-service stopped")
 
 
