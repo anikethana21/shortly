@@ -105,14 +105,14 @@ async def proxy_to_link_service(request: Request, path: str):
     return await _proxy(request, LINK_SERVICE_URL)
 
 
+@app.get("/health")
+async def health():
+    return {"status": "ok", "service": "api-gateway"}
+
+
 @app.api_route(
     "/{path:path}",
     methods=["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
 )
 async def proxy_to_redirect_service(request: Request, path: str):
     return await _proxy(request, REDIRECT_SERVICE_URL)
-
-
-@app.get("/health")
-async def health():
-    return {"status": "ok", "service": "api-gateway"}
